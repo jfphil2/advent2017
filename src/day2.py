@@ -7,6 +7,12 @@ TEST_INPUT_PART1 = """
 2 4 6 8
 """
 
+TEST_INPUT_PART2 = """
+5 9 2 8
+9 4 7 3
+3 8 6 5
+"""
+
 INPUT = """
 414	382	1515	319	83	1327	116	391	101	749	1388	1046	1427	105	1341	1590
 960	930	192	147	932	621	1139	198	865	820	597	165	232	417	19	183
@@ -27,12 +33,12 @@ INPUT = """
 """
 
 
-def corruption_checksum(input):
+def corruption_checksum_part1(input):
     checksum = 0
     for line in input.split('\n'):
         if line:
             checksum += row_difference(line)
-    return checksum    
+    return checksum
 
 
 def row_difference(line):
@@ -45,17 +51,49 @@ def row_difference(line):
         if not max or value > max:
             max = value
     return max - min
-    
-    
-def test(input, expected):
-    actual = corruption_checksum(input)
-    print('[corruption_checksum({}) = {}] == {}'.format(input, actual, expected))
+
+
+def test_part1(input, expected):
+    actual = corruption_checksum_part1(input)
+    print('[corruption_checksum_part1({}) = {}] == {}'.format(
+            input, actual, expected))
     assert actual == expected
 
-    
+
 def test_row_differences(input, expected):
     actual = row_difference(input)
     print('[row_difference({}) = {}] == {}'.format(input, actual, expected))
+    assert actual == expected
+
+
+def corruption_checksum_part2(input):
+    checksum = 0
+    for line in input.split('\n'):
+        if line:
+            checksum += row_dividend_result(line)
+    return checksum
+
+
+def row_dividend_result(line):
+    for divisor in line.split():
+        divisor = int(divisor)
+        for dividend in line.split():
+            dividend = int(dividend)
+            if dividend != divisor and dividend % divisor == 0:
+                return int(dividend / divisor)
+
+
+def test_part2(input, expected):
+    actual = corruption_checksum_part2(input)
+    print('[corruption_checksum_part2({}) = {}] == {}'.format(
+            input, actual, expected))
+    assert actual == expected
+
+
+def test_row_dividend_result(input, expected):
+    actual = row_dividend_result(input)
+    print('[row_dividend_result({}) = {}] == {}'.format(
+            input, actual, expected))
     assert actual == expected
 
 
@@ -63,6 +101,11 @@ if __name__ == '__main__':
     part1_test_data = {"5 1 9 5": 8, "7 5 3": 4, "2 4 6 8": 6}
     for line, expected in part1_test_data.items():
         test_row_differences(line, expected)
-    test(TEST_INPUT_PART1, sum(part1_test_data.values()))
-    print('Part One Solution:', corruption_checksum(INPUT))
-    
+    test_part1(TEST_INPUT_PART1, sum(part1_test_data.values()))
+    print('Part One Solution:', corruption_checksum_part1(INPUT))
+
+    part2_test_data = {"5 9 2 8": 4, "9 4 7 3": 3, "3 8 6 5": 2}
+    for line, expected in part2_test_data.items():
+        test_row_dividend_result(line, expected)
+    test_part2(TEST_INPUT_PART2, sum(part2_test_data.values()))
+    print('Part Two Solution:', corruption_checksum_part2(INPUT))
