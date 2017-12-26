@@ -42,9 +42,94 @@ def test(input, expected):
     print("manhattan_path({}) = {} == {}".format(input, actual, expected))
     assert actual == expected
 
+
+class Grid:
+
+
+    def __init__(self):
+        self.grid = {0: {0: 1}}
+
+
+    def add_new_value(self, x, y):
+        sum = self.get_value(x, y)
+        sum += self.get_value(x + 1, y)
+        sum += self.get_value(x + 1, y + 1)
+        sum += self.get_value(x, y + 1)
+        sum += self.get_value(x - 1, y + 1)
+        sum += self.get_value(x - 1, y)
+        sum += self.get_value(x - 1, y - 1)
+        sum += self.get_value(x, y - 1)
+        sum += self.get_value(x + 1, y - 1)
+
+        # print("  add_new_value({},{}) = {}".format(x, y, sum))
+
+        if x not in self.grid.keys():
+            self.grid[x] = {}
+        self.grid[x][y] = sum
+        self.print_value(x, y)
+
+
+    def get_value(self, x, y):
+        if x not in self.grid.keys():
+            return 0
+        if y not in self.grid[x].keys():
+            return 0
+        return self.grid[x][y]
+
+
+    def print_value(self, x, y):
+        print("    grid[{}][{}] = {}".format(x, y, self.get_value(x,y)))
+
+
+def grid_stress_test(input):
+    x = 0
+    y = 0
+    grow_factor = 0
+
+    grid = Grid()
+    while True:
+        grow_factor += 1
+        for xv in range(x + 1, x + grow_factor + 1, 1):
+            grid.add_new_value(xv, y)
+            if grid.get_value(xv, y) > input:
+                return grid.get_value(xv, y)
+        x = xv
+
+        for yv in range(y + 1, y + grow_factor + 1, 1):
+            grid.add_new_value(x, yv)
+            if grid.get_value(x, yv) > input:
+                return grid.get_value(x, yv)
+        y = yv
+
+        grow_factor += 1
+        for xv in range(x - 1, x - grow_factor - 1, -1):
+            grid.add_new_value(xv, y)
+            if grid.get_value(xv, y) > input:
+                return grid.get_value(xv, y)
+        x = xv
+
+        for yv in range(y - 1, y - grow_factor - 1, -1):
+            grid.add_new_value(x, yv)
+            if grid.get_value(x, yv) > input:
+                return grid.get_value(x, yv)
+        y = yv
+
+
+def test_grid(input, expected):
+    actual = grid_stress_test(input)
+    print("grid_stress_test({}) = {} == {}".format(input, actual, expected))
+    assert actual == expected
+
+
 if __name__ == '__main__':
-    test(1, 0)
-    test(12, 3)
-    test(23, 2)
-    test(1024, 31)
-    print("Part One Solution:", manhattan_path(INPUT))
+    # test(1, 0)
+    # test(12, 3)
+    # test(23, 2)
+    # test(1024, 31)
+    # print("Part One Solution:", manhattan_path(INPUT))
+
+    test_grid(2, 4)
+    test_grid(12, 23)
+    test_grid(748, 806)
+    print("Part Two Solution:", grid_stress_test(INPUT))
+
