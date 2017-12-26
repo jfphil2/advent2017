@@ -5,7 +5,7 @@
 INPUT = [4, 1, 15, 12, 0, 9, 9, 5, 5, 8, 7, 3, 14, 5, 12, 3]
 
 TEST_INPUT = [0, 2, 7, 0]
-TEST_OUTPUT = 5
+TEST_OUTPUT = (5, 4)
 
 
 def loop_detector(input):
@@ -38,7 +38,9 @@ def loop_detector(input):
 
     print('    ', distribution)
 
-    return len(distributions)
+    loop_size = len(distributions) - distributions.index(str(distribution))
+
+    return (len(distributions), loop_size)
 
 
 if __name__ == '__main__':
@@ -46,4 +48,4 @@ if __name__ == '__main__':
     print("loop_detector() = {} == {}".format(redistributions, TEST_OUTPUT))
     assert redistributions == TEST_OUTPUT
 
-    print("Part One Solution:", loop_detector(INPUT))
+    print("Solutions (Part 1, Part 2):", loop_detector(INPUT))
