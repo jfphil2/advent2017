@@ -1110,9 +1110,10 @@ TEST_INPUT = '''
 '''
 
 TEST_OUTPUT = 5
+STRANGE_TEST_OUTPUT = 10
 
 
-def maze_solver(input):
+def maze_solver(input, strange = False):
     maze = list(map(int, input.strip('\n').split('\n')))
     current_index = 0
     steps = 0
@@ -1123,7 +1124,10 @@ def maze_solver(input):
         # Take the jump
         current_index += maze[current_index]
         # Increment the previous "trampoline"
-        maze[prev_index] += 1
+        if strange and maze[prev_index] >= 3:
+            maze[prev_index] -= 1
+        else:
+            maze[prev_index] += 1
         steps += 1
 
     print('    ', maze)
@@ -1136,4 +1140,11 @@ if __name__ == '__main__':
     print("maze_solver() = {} == {}".format(test_steps, TEST_OUTPUT))
     assert test_steps == TEST_OUTPUT
 
-    print("Part One Solution:", maze_solver(INPUT))
+    # print("Part One Solution:", maze_solver(INPUT))
+
+    strange_test_steps = maze_solver(TEST_INPUT, strange = True)
+    print("maze_solver(strange) = {} == {}".format(
+            strange_test_steps, STRANGE_TEST_OUTPUT))
+    assert strange_test_steps == STRANGE_TEST_OUTPUT
+
+    print("Part Two Solution:", maze_solver(INPUT, strange = True))
