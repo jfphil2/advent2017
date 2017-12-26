@@ -542,16 +542,51 @@ def high_entropy_passphrases(phrases):
     return sum
 
 
-def test(input, expected):
+def test_part1(input, expected):
     actual = high_entropy_passphrases(input)
     print("high_entropy_passphrases({}) = {} == {}".format(
             input, actual, expected))
     assert actual == expected
 
 
+def anagram_passphrase(phrase):
+    for raw_checker in phrase.split():
+        checker = sorted(raw_checker)
+        first = None
+        for index, word in enumerate(phrase.split()):
+            if checker == sorted(word):
+                if first == None:
+                    first = index
+                elif first != None:
+                    return False
+    return True
+
+
+def anagram_passphrases(phrases):
+    sum = 0
+    for phrase in phrases.split('\n'):
+        if phrase and anagram_passphrase(phrase):
+            sum += 1
+    return sum
+
+
+def test_part2(input, expected):
+    actual = anagram_passphrases(input)
+    print("anagram_passphrases({}) = {} == {}".format(
+            input, actual, expected))
+    assert actual == expected
+
+
 if __name__ == '__main__':
-    test('aa bb cc dd ee', 1)
-    test('aa bb cc dd aa', 0)
-    test('aa bb cc dd aaa', 1)
-    test(TEST_INPUT, 2)
+    test_part1('aa bb cc dd ee', 1)
+    test_part1('aa bb cc dd aa', 0)
+    test_part1('aa bb cc dd aaa', 1)
+    test_part1(TEST_INPUT, 2)
     print("Part One Solution:", high_entropy_passphrases(INPUT))
+
+    test_part2('abcde fghij', 1)
+    test_part2('abcde xyz ecdab', 0)
+    test_part2('a ab abc abd abf abj', 1)
+    test_part2('iiii oiii ooii oooi oooo', 1)
+    test_part2('oiii ioii iioi iiio', 0)
+    print("Part Two Solution:", anagram_passphrases(INPUT))
