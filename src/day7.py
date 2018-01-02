@@ -1338,66 +1338,147 @@ gyxo (61)
 cntj (57)
 '''
 
-TEST_OUTPUT = {'name': 'tknk', 'weight': 41, 'disc': ['ugml', 'padx', 'fwft']}
+TEST_OUTPUT = {
+    'name': 'tknk',
+    'weight': 41,
+    'disc': {'ugml': None, 'padx': None, 'fwft': None},
+    'height': 0
+}
+
+class RecursiveCircus:
+
+    def __init__(self, input):
+        '''
+        This input is rather complex so parsing it has been separated out.
+        '''
+        self.programs = []
+
+        # Parse the input through a regular expression
+        pattern = re.compile("""
+                ^(?P<name>\w+)\s                      # the name of the program
+                \((?P<weight>\d+)\)                   # the weight of the program
+                (?:\s->\s(?P<disc>(?:\w+,\s)*\w+))?$  # the disc if present
+        """, re.VERBOSE)
+
+        for line in input.strip('\n').split('\n'):
+            result = pattern.match(line)
+
+            # Add in extra fields to aid in processing the data
+            disc = result.group('disc').split(', ') if result.group('disc') else []
+            program = {'name':   result.group('name'),
+                       'weight': int(result.group('weight')),
+                       'disc': dict.fromkeys(disc),
+                       'height': None
+            }
+
+            self.programs.append(program)
+
+        # Start populating meta-data, beginning with the base
+        self.base = self._find_base(self.programs[0])
+        self.base['height'] = 0
+
+        self._populate_heights(self.base)
+        self._calculate_real_weight(self.base)
 
 
-def pprint_program(program):
-    ''' Convenience function to make output similar to input '''
-    print('{name} ({weight}) -> {disc}'.format(**program))
+    def _find_base(self, lowest):
+        ''' Recursively find the lowest ring of this circus '''
+        for program in self.programs:
+            if lowest['name'] in program['disc'].keys():
+                return self._find_base(program)
+        return lowest
 
 
-def parse_input(input):
-    '''
-    This input is rather complex so parsing it has been separated out.
-    '''
-    programs = []
-    pattern = re.compile("""
-            ^(?P<name>\w+)\s                      # the name of the program
-            \((?P<weight>\d+)\)                   # the weight of the program
-            (?:\s->\s(?P<disc>(?:\w+,\s)*\w+))?$  # the disc if present
-    """, re.VERBOSE)
+    def _calculate_real_weight(self, current):
+        '''
+        Populate the disc values with the real weight
+        '''
+        if not current['disc']:
+            return current['weight']
 
-    for line in input.strip('\n').split('\n'):
-        result = pattern.match(line)
+        for program in self.programs:
+            if program['name'] in current['disc'].keys():
+                current['disc'][program['name']] = \
+                        self._calculate_real_weight(program)
 
-        disc = result.group('disc').split(', ') if result.group('disc') else []
-        program = {'name':   result.group('name'),
-                   'weight': result.group('weight'),
-                   'disc': disc
-        }
+        return current['weight'] + sum(current['disc'].values())
 
-        programs.append(program)
 
-    return programs
+    def _populate_heights(self, current):
+        '''
+        Given a ring of lower height, populate the heights of the programs on
+        its disc.
+        '''
+        for program in self.programs:
+            if program['name'] in current['disc'].keys():
+                program['height'] = current['height'] + 1
+                self._populate_heights(program)
 
-def find_bottom(tower):
-    '''
-    The test output suggests the weight may be enough, but lets use some
-    recursion to double check.
-    '''
-    # First find the lowest weight
-    bottom = tower[0]
-    for level in tower:
-        if level['weight'] < bottom['weight']:
-            bottom = level
+    def find_unbalanced_program(self):
+        ''' Find the unbalanced program and print its corrected value '''
+        return self._find_unbalanced_program(self.base)
 
-    # Double check for sanity
-    return _find_lower(tower, bottom)
+    def _find_unbalanced_program(self, current):
+        '''
+        Return the "problem" if found, otherwise False.  Will calculate and
+        print a correction to the value.
+        '''
+        # Sort the current disc based on the weight
+        weights = {}
+        for program, weight in current['disc'].items():
+            if weight not in weights.keys():
+                weights[weight] = []
+            weights[weight].append(program)
 
-def _find_lower(tower, bottom):
-    ''' The problem suggests recursion, so use recursion. '''
-    for level in tower:
-        if bottom['name'] in level['disc']:
-            return _find_lower(tower, level)
-    return bottom
+        # print(weights)
+        if len(weights.keys()) == 1:
+            return False
+
+        correct_weight = None
+        problem = None
+        problem_weight = None
+        # This program has an unbalanced disc
+        for key, programs in weights.items():
+            # Problem says exactly 1 unbalanced program!
+            if len(programs) == 1:
+                problem_weight = key
+                for p in self.programs:
+                    if p['name'] in programs:
+                        problem = p
+            else:
+                correct_weight = key
+
+        # print(problem)
+        if problem:
+            result = self._find_unbalanced_program(problem)
+            if result:
+                return result
+
+            print('{} has a total weight of {} and it should be {}.'.format(
+                    problem['name'], problem_weight, correct_weight))
+            print('The individual program weight should be {}.'.format(
+                    problem['weight'] - problem_weight + correct_weight))
+            # Return the level with the unbalanced disc for testing
+            return problem
+
+        return False
 
 
 if __name__ == '__main__':
-    tower = parse_input(TEST_INPUT)
-    for level in tower:
-        pprint_program(level)
-    test_bottom = find_bottom(tower)
+    test_circus = RecursiveCircus(TEST_INPUT)
+
+    test_bottom = test_circus.base
     print('Test Bottom:', test_bottom['name'])
-    assert set(test_bottom) == set(TEST_OUTPUT)
-    print('Day 1: Part 1:', find_bottom(parse_input(INPUT)))
+    assert set(test_bottom) == set(TEST_OUTPUT) # Will exclude nested dict
+
+    test_program = test_circus.find_unbalanced_program()
+    print('Test Program:', test_program['name'])
+    assert set(test_program) == set(TEST_OUTPUT) # Will exclude nested dict
+
+    # TO DO: In my tinkering I broke my test
+
+    real_circus = RecursiveCircus(INPUT)
+
+    print('Day 7: Part 1:', real_circus.base)
+    print('Day 7: Part 2:', real_circus.find_unbalanced_program())
 
