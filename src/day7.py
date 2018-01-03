@@ -1338,12 +1338,20 @@ gyxo (61)
 cntj (57)
 '''
 
-TEST_OUTPUT = {
+TEST_OUTPUT_1 = {
     'name': 'tknk',
     'weight': 41,
-    'disc': {'ugml': None, 'padx': None, 'fwft': None},
+    'disc': {'ugml': 251, 'padx': 243, 'fwft': 243},
     'height': 0
 }
+
+TEST_OUTPUT_2 = {
+    'name': 'ugml',
+    'weight': 68,
+    'disc': {'gyxo': 61, 'ebii': 61, 'jptl': 61},
+    'height': 1
+}
+
 
 class RecursiveCircus:
 
@@ -1468,14 +1476,12 @@ if __name__ == '__main__':
     test_circus = RecursiveCircus(TEST_INPUT)
 
     test_bottom = test_circus.base
-    print('Test Bottom:', test_bottom['name'])
-    assert set(test_bottom) == set(TEST_OUTPUT) # Will exclude nested dict
+    print('Test Bottom:', test_bottom)
+    assert list(test_bottom.values()) == list(TEST_OUTPUT_1.values())
 
     test_program = test_circus.find_unbalanced_program()
-    print('Test Program:', test_program['name'])
-    assert set(test_program) == set(TEST_OUTPUT) # Will exclude nested dict
-
-    # TO DO: In my tinkering I broke my test
+    print('Test Program:', test_program)
+    assert list(test_program.values()) == list(TEST_OUTPUT_2.values())
 
     real_circus = RecursiveCircus(INPUT)
 
