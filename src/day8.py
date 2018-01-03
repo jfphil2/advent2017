@@ -1035,7 +1035,7 @@ def register_puzzle(input):
     pattern = re.compile("""
             ^(?P<register>\w+)\s             # the register to modify
             (?P<operation>(?:inc|dec))\s     # increase or decrease
-            (?P<value>-?\d+)\s               # amount to increase or decrease
+            (?P<value>-?\d+)\s               # amount to + or -
             if\s                             # start of the conditional
             (?P<test_register>\w+)\s         # register for conditional
             (?P<test_operator>[<>=!]{1,2})\s # conditional operator
@@ -1044,6 +1044,8 @@ def register_puzzle(input):
 
     # Dictionary of registers to operate on
     registers = {}
+
+    maximum = ('', 0)
 
     for line in input.strip('\n').split('\n'):
         instruction = pattern.match(line).groupdict()
@@ -1067,6 +1069,15 @@ def register_puzzle(input):
                     modification_func(registers[instruction['register']],
                                       int(instruction['value']))
 
+        # Part 2: find the maximum through the course of all operations
+        current_max = get_maximum_register(registers)
+        if current_max[1] > maximum[1]:
+            maximum = current_max
+
+    # This is a very lazy approach to this problem.  To be honest, I used
+    # very wordy variables and don't want to re-factor this into a class so
+    # that the maximum value is retrievable...
+    print('Day 8: Part 2:', maximum)
     return registers
 
 
