@@ -19,48 +19,73 @@ class StreamProcessor:
 
 
     def _start_garbage(self):
-        self.garbage = True
+        if not self.garbage:
+            self.garbage = True
+            return True
+        return False
 
 
     def _end_garbage(self):
         self.garbage = False
+        return True
 
 
     def _ignore(self):
         self.index += 1
+        return True
 
 
     def _start_group(self):
         if not self.garbage:
             self.depth += 1
+            return True
+        return False
 
 
     def _end_group(self):
         if not self.garbage:
             self.score.append(self.depth)
             self.depth -= 1
+            return True
+        return False
 
 
     def process(self, input):
         while self.index < len(input):
             char = input[self.index]
             if char in self.operations.keys():
-                self.operations[char]()
+                if self.operations[char]():
+                    self.index += 1
+                    continue
+
+            if self.garbage:
+                self.garbage_collected += char
+
             self.index += 1
         return sum(self.score)
 
 
     def reset(self):
+        self.cleaned = ''
         self.depth = 0
         self.garbage = False
+        self.garbage_collected = ''
         self.index = 0
         self.score = []
 
 
-def test(input, expected):
-    actual = StreamProcessor().process(input)
-    print('{} {} {}'.format(input, actual, expected))
+def test(input, expected, expected_garbage=None):
+    p = StreamProcessor()
+    actual = p.process(input)
+    print('  Test:', input)
+    print('      Actual Score:', actual)
+    print('      Expected Score:', expected)
     assert actual == expected
+
+    if expected_garbage != None:
+        print('      Garbage Collected:', len(p.garbage_collected))
+        print('      Expected Garbage:', expected_garbage)
+        assert len(p.garbage_collected) == expected_garbage
 
 
 if __name__ == '__main__':
@@ -72,4 +97,15 @@ if __name__ == '__main__':
     test('{{<ab>},{<ab>},{<ab>},{<ab>}}', 9)
     test('{{<!!>},{<!!>},{<!!>},{<!!>}}', 9)
     test('{{<a!>},{<a!>},{<a!>},{<ab>}}', 3)
-    print('Day 9: Part 1:', StreamProcessor().process(INPUT))
+
+    sp = StreamProcessor()
+    print('Day 9: Part 1:', sp.process(INPUT))
+
+    test('<>', 0, 0)
+    test('<random characters>', 0, 17)
+    test('<<<<>', 0, 3)
+    test('<{!>}>', 0, 2)
+    test('<!!>', 0, 0)
+    test('<!!!>>', 0, 0)
+    test('<{o"i!a,<{i<a>', 0, 10)
+    print('Day 9: Part 2:', len(sp.garbage_collected))
