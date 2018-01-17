@@ -55,9 +55,40 @@ class HexGrid:
         return False
 
 
-def test(input, expected):
+    def find_furthest_point(self):
+        furthest = 0
+        route = []
+        for step in self.path:
+            # Append the new step to a planned route
+            route.append(step)
+            route = self._handle_step_in_reverse(route)
+
+            if len(route) > furthest:
+                furthest = len(route)
+
+        return (furthest, route)
+
+
+    def _handle_step_in_reverse(self, route):
+        ''' Similar to _handle_step, but searches in reverse '''
+        # Use a dictionary lookup to find direction replacements to
+        # keep the route as short as possible
+        for lookup, replacement in DIRECTIONS[route[-1]].items():
+            # Loop backwards looking for direction replacements
+            for rearview in range(len(route) - 1, -1, -1):
+                if (route[rearview] == lookup):
+                    del route[-1] # Remove the item just added
+                    if replacement:
+                        route[rearview] = replacement
+                    else:
+                        del route[rearview]
+                    return route
+        return route
+
+
+def test_shortest(input, expected):
     hex = HexGrid(input)
-    title = 'Test: HexGrid({})'.format(input) # Easier than deep copy of list
+    title = 'Test Shortest: HexGrid({})'.format(input)
     actual = hex.get_shortest_path()
 
     try:
@@ -67,15 +98,33 @@ def test(input, expected):
         print('    Expected: {} {}'.format(*expected))
         print('    Actual  : {} {}'.format(*actual))
 
+def test_furthest(input, expected):
+    hex = HexGrid(input)
+    actual = hex.find_furthest_point()
+
+    try:
+        assert(actual == expected)
+    except AssertionError:
+        print('Test Furthest: HexGrid({})'.format(input))
+        print('    Expected: {} {}'.format(*expected))
+        print('    Actual  : {} {}'.format(*actual))
+
 
 if __name__ == '__main__':
 
-    test([NE,NE,NE], (3, [NE,NE,NE]))
-    test([NE,NE,SW,SW], (0, []))
-    test([NE,NE,S,S], (2, [SE,SE]))
-    test([SE,SW,SE,SW,SW], (3, [S,S,SW]))
+    test_shortest([NE,NE,NE], (3, [NE,NE,NE]))
+    test_shortest([NE,NE,SW,SW], (0, []))
+    test_shortest([NE,NE,S,S], (2, [SE,SE]))
+    test_shortest([SE,SW,SE,SW,SW], (3, [S,S,SW]))
 
+    test_furthest([NE,NE,NE], (3, [NE,NE,NE]))
+    test_furthest([NE,NE,SW,SW], (2, []))
+    test_furthest([NE,NE,S,S], (2, [SE,SE]))
+    test_furthest([SE,SW,SE,SW,SW], (3, [S,S,SW]))
 
-    with open(INPUT_FILE, 'r') as input:
-        hex = HexGrid(input.read().strip().split(','))
-        print('Day 11: Part 1:', hex.get_shortest_path()[0])
+    input = open(INPUT_FILE, 'r').read().strip().split(',')
+    hex = HexGrid(input)
+    furthest, path = hex.find_furthest_point()
+
+    print('Day 11: Part 1:', len(path))
+    print('Day 11: Part 2:', furthest)
